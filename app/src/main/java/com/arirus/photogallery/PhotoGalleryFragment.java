@@ -9,8 +9,11 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by whd910421 on 16/10/11.
@@ -20,6 +23,7 @@ public class PhotoGalleryFragment extends Fragment {
     private final static String TAG = "PhotoGralleryFragemnet";
 
     private RecyclerView mRecyclerView;
+    private List<GalleryItem> mItems = new ArrayList<>();
 
     public static PhotoGalleryFragment newInstance()
     {
@@ -39,10 +43,59 @@ public class PhotoGalleryFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
         mRecyclerView = (RecyclerView)v.findViewById(R.id.fragment_photo_gallery_recycle_view);
         mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
-
+        setupAdapter();
         return v;
     }
 
+    ///////////////////////////////RecyclerView 相关////////////////////////////////////
+    private class PhotoHolder extends RecyclerView.ViewHolder
+    {
+        private TextView mTitleTextView;
+
+        public PhotoHolder(View itemView) {
+            super(itemView);
+            mTitleTextView = (TextView) itemView;
+        }
+
+        public void bindGalleryItem(GalleryItem item)
+        {
+            mTitleTextView.setText(item.toString());
+        }
+    }
+
+    private class PhotoAdpter extends RecyclerView.Adapter<PhotoHolder>
+    {
+        private List<GalleryItem> mGalleryItems;
+
+        public PhotoAdpter(List<GalleryItem> galleryItems) {
+            mGalleryItems = galleryItems;
+        }
+
+        @Override
+        public PhotoHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            TextView textView = new TextView(getActivity());
+            return new PhotoHolder(textView);
+        }
+
+        @Override
+        public void onBindViewHolder(PhotoHolder holder, int position) {
+            GalleryItem galleryItem = mGalleryItems.get(position);
+            holder.bindGalleryItem(galleryItem);
+        }
+
+        @Override
+        public int getItemCount() {
+            return mGalleryItems.size();
+        }
+    }
+    private void setupAdapter()
+    {
+        if (isAdded())
+        {
+            mRecyclerView.setAdapter(new PhotoAdpter(mItems));
+        }
+    }
+    ///////////////////////////////RecyclerView 相关////////////////////////////////////
     private class FetchItemsTask extends AsyncTask<Void, Void, Void>
     {
         @Override
