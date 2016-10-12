@@ -1,3 +1,4 @@
 /build
-/src/
-!/src/main
+/src/test
+/src/androidTest
+
