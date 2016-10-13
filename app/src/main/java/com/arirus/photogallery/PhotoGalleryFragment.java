@@ -96,19 +96,17 @@ public class PhotoGalleryFragment extends Fragment {
         }
     }
     ///////////////////////////////RecyclerView 相关////////////////////////////////////
-    private class FetchItemsTask extends AsyncTask<Void, Void, Void>
+    private class FetchItemsTask extends AsyncTask<Void, Void, List<GalleryItem>>
     {
         @Override
-        protected Void doInBackground(Void... params) {
-//            try {
-//                String result = new FlickrFetchr().getUrlString("http://www.3dmgame.com");
-//                arirusLog.get().ShowLog(TAG,"成功获取", result);
-//            }catch (IOException ioe)
-//            {
-//                arirusLog.get().ShowLog(TAG, "获取失败" , ioe.toString());
-//            }
-            new FlickrFetchr().fetchItems();
-            return null;
+        protected List<GalleryItem> doInBackground(Void... params) {
+            return new FlickrFetchr().fetchItems();
+        }
+
+        @Override
+        protected void onPostExecute(List<GalleryItem> items) {
+            mItems = items;
+            setupAdapter();
         }
     }
 
