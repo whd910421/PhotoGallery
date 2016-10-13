@@ -2,6 +2,9 @@ package com.arirus.photogallery;
 
 import android.net.Uri;
 
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -89,24 +92,33 @@ public class FlickrFetchr {
 
     private void parseItems(List<GalleryItem> items, JSONObject jsonBody) throws IOException, JSONException
     {
-        JSONObject photosJsonObject = jsonBody.getJSONObject("photos");
-        JSONArray photoJsonArray = photosJsonObject.getJSONArray("photo");
+        Gson gson = new Gson();
+        JSONObject photosJsonObject = gson.fromJson(jsonBody.toString(), jsonBody.getJSONObject("photos").getClass());
+        JSONArray photoJsonArray = gson.fromJson(photosJsonObject.toString(), photosJsonObject.getJSONArray("photo").getClass());
 
         for (int i = 0; i < photoJsonArray.length(); i++)
         {
-            JSONObject photoJsonObject = photoJsonArray.getJSONObject(i);
-
-            GalleryItem item = new GalleryItem();
-            item.setId(photoJsonObject.getString("id"));
-            item.setCaption(photoJsonObject.getString("title"));
-
-            if (!photoJsonObject.has("url_s"))
-            {
-                continue;
-            }
-
-            item.setUrl(photoJsonObject.getString("url_s"));
+            GalleryItem item = gson.fromJson(photoJsonArray.getJSONObject(i).toString(), GalleryItem.class);
             items.add(item);
         }
+//        JSONObject photosJsonObject = jsonBody.getJSONObject("photos");
+//        JSONArray photoJsonArray = photosJsonObject.getJSONArray("photo");
+//
+//        for (int i = 0; i < photoJsonArray.length(); i++)
+//        {
+//            JSONObject photoJsonObject = photoJsonArray.getJSONObject(i);
+//
+//            GalleryItem item = new GalleryItem();
+//            item.setId(photoJsonObject.getString("id"));
+//            item.setCaption(photoJsonObject.getString("title"));
+//
+//            if (!photoJsonObject.has("url_s"))
+//            {
+//                continue;
+//            }
+//
+//            item.setUrl(photoJsonObject.getString("url_s"));
+//            items.add(item);
+//        }
     }
 }
