@@ -85,7 +85,7 @@ public class FlickrFetchr {
                     .appendQueryParameter("nojsoncallback", "1")
                     .appendQueryParameter("extras", "url_s")
                     .appendQueryParameter("page", String.valueOf(curPage) )
-                    .appendQueryParameter("per_page", "10")
+                    .appendQueryParameter("per_page", "50")
                     .build().toString();
             String jsonString = getUrlString(url);
             arirusLog.get().ShowLog(TAG, "JSON串是:", jsonString);

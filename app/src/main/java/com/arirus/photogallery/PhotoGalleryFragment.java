@@ -50,12 +50,13 @@ public class PhotoGalleryFragment extends Fragment {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 GridLayoutManager gridLayoutManager = (GridLayoutManager) mRecyclerView.getLayoutManager();
-                arirusLog.get().ShowLog(TAG, "findLastCompletelyVisibleItemPosition" + String.valueOf(gridLayoutManager.findLastCompletelyVisibleItemPosition()));
-                if (gridLayoutManager.findLastCompletelyVisibleItemPosition() == FlickrFetchr.getInstance().getCurPage()*10 -1)
+                arirusLog.get().ShowLog(TAG, "findFirstCompletelyVisibleItemPosition" + String.valueOf(gridLayoutManager.findFirstCompletelyVisibleItemPosition()));
+
+                if (gridLayoutManager.findFirstCompletelyVisibleItemPosition() >= FlickrFetchr.getInstance().getCurPage()*50 -20)
                 {
                     new FetchItemsTask().execute();
                 }
-                mLastPos = gridLayoutManager.findLastCompletelyVisibleItemPosition();
+                mLastPos = gridLayoutManager.findFirstCompletelyVisibleItemPosition();
             }
         });
         setupAdapter();
@@ -111,6 +112,7 @@ public class PhotoGalleryFragment extends Fragment {
         {
             mRecyclerView.setAdapter(new PhotoAdpter(mItems));
             mRecyclerView.scrollToPosition(mLastPos);
+            arirusLog.get().ShowLog(TAG, String.valueOf(mLastPos));
         }
     }
     ///////////////////////////////RecyclerView 相关////////////////////////////////////
@@ -126,7 +128,7 @@ public class PhotoGalleryFragment extends Fragment {
 
         @Override
         protected void onPostExecute(List<GalleryItem> items) {
-            arirusLog.get().ShowLog(TAG, "hashCode"+ String.valueOf(index));
+//            arirusLog.get().ShowLog(TAG, "hashCode"+ String.valueOf(index));
             for ( GalleryItem item: items)
             {
                 mItems.add(item);
