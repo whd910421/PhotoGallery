@@ -25,6 +25,7 @@ public class PhotoGalleryFragment extends Fragment {
 
     private RecyclerView mRecyclerView;
     private List<GalleryItem> mItems = new ArrayList<>();
+    private static int mLastPos ;
 
     public static PhotoGalleryFragment newInstance()
     {
@@ -47,25 +48,16 @@ public class PhotoGalleryFragment extends Fragment {
         mRecyclerView.setOnScrollListener(new RecyclerView.OnScrollListener() {
 
             @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-                arirusLog.get().ShowLog(TAG, "newState is "+String.valueOf(newState));
-            }
-
-            @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                arirusLog.get().ShowLog(TAG, "dx is "+String.valueOf(dx)+", dy is "+String.valueOf(dy));
+                GridLayoutManager gridLayoutManager = (GridLayoutManager) mRecyclerView.getLayoutManager();
+                arirusLog.get().ShowLog(TAG, "findLastCompletelyVisibleItemPosition" + String.valueOf(gridLayoutManager.findLastCompletelyVisibleItemPosition()));
+                if (gridLayoutManager.findLastCompletelyVisibleItemPosition() == FlickrFetchr.getInstance().getCurPage()*10 -1)
+                {
+                    new FetchItemsTask().execute();
+                }
+                mLastPos = gridLayoutManager.findLastCompletelyVisibleItemPosition();
             }
         });
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//            mRecyclerView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
-//                @Override
-//                public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
-//
-//                }
-//            });
-//        }
         setupAdapter();
         return v;
     }
@@ -110,27 +102,38 @@ public class PhotoGalleryFragment extends Fragment {
         public int getItemCount() {
             return mGalleryItems.size();
         }
+
+
     }
     private void setupAdapter()
     {
         if (isAdded())
         {
             mRecyclerView.setAdapter(new PhotoAdpter(mItems));
+            mRecyclerView.scrollToPosition(mLastPos);
         }
     }
     ///////////////////////////////RecyclerView 相关////////////////////////////////////
     private class FetchItemsTask extends AsyncTask<Void, Void, List<GalleryItem>>
     {
+        private int index ;
+
         @Override
         protected List<GalleryItem> doInBackground(Void... params) {
-            return new FlickrFetchr().fetchItems();
+            index = this.hashCode();
+            return FlickrFetchr.getInstance().fetchItems();
         }
 
         @Override
         protected void onPostExecute(List<GalleryItem> items) {
-            mItems = items;
+            arirusLog.get().ShowLog(TAG, "hashCode"+ String.valueOf(index));
+            for ( GalleryItem item: items)
+            {
+                mItems.add(item);
+            }
             setupAdapter();
         }
+
     }
 
 }

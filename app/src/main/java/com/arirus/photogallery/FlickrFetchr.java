@@ -3,7 +3,6 @@ package com.arirus.photogallery;
 import android.net.Uri;
 
 import com.google.gson.Gson;
-import com.google.gson.stream.JsonReader;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,20 +25,18 @@ public class FlickrFetchr {
     private final static String API_KEY = "60499a8b051cafb279a31b89fbf2a91d";
     private final static String PASS_WORD = "8d8371230308e704";
 
+    public int getCurPage() {
+        return curPage;
+    }
     private static int curPage = 0;
-//    private static FlickrFetchr mFlickrFetchr;
-//    private List<GalleryItem> mItems;
-//
-//    public FlickrFetchr() {
-//        mItems = new ArrayList<>();
-//    }
-//
-//    public static FlickrFetchr getInstance()
-//    {
-//        if (mFlickrFetchr == null)
-//            mFlickrFetchr = new FlickrFetchr();
-//        return mFlickrFetchr;
-//    }
+    private static FlickrFetchr mFlickrFetchr;
+
+    public static FlickrFetchr getInstance()
+    {
+        if (mFlickrFetchr == null)
+            mFlickrFetchr = new FlickrFetchr();
+        return mFlickrFetchr;
+    }
 
     public byte[] getUrlBytes(String urlSpec) throws IOException
     {
@@ -88,6 +85,7 @@ public class FlickrFetchr {
                     .appendQueryParameter("nojsoncallback", "1")
                     .appendQueryParameter("extras", "url_s")
                     .appendQueryParameter("page", String.valueOf(curPage) )
+                    .appendQueryParameter("per_page", "10")
                     .build().toString();
             String jsonString = getUrlString(url);
             arirusLog.get().ShowLog(TAG, "JSON串是:", jsonString);
