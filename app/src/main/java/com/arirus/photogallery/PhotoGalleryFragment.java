@@ -10,13 +10,13 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.util.LruCache;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,13 +30,13 @@ import java.util.List;
 
 public class PhotoGalleryFragment extends Fragment {
     private final static String TAG = "PhotoGralleryFragemnet";
-    public static final int GET_BITMAP = 0;
+//    public static final int GET_BITMAP = 0;
     private RecyclerView mRecyclerView;
     private List<GalleryItem> mItems = new ArrayList<>();
     private ThumbnailDownloader<PhotoHolder> mThumbnailDownloader;
     private Handler mHandler ;
     private static int mLastPos ;
-
+    private LruCache<String, Drawable> mDrawableLruCache;
 
 
     public static PhotoGalleryFragment newInstance()
@@ -49,32 +49,34 @@ public class PhotoGalleryFragment extends Fragment {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
         new FetchItemsTask().execute();
-
-        mHandler = new Handler()
-        {
-            @Override
-            public void handleMessage(Message msg) {
-                arirusLog.get().ShowLog(TAG, "HandleMessage");
-                if (msg.what == GET_BITMAP && isAdded())
-                {
-                    arirusLog.get().ShowLog(TAG, "HandleMessage isAdded");
-                    tempData Target = (tempData) msg.obj;
-                    PhotoHolder target = Target.tempHolder;
-                    Bitmap bitmap = Target.tempBitmap;
-                    Drawable drawable = new BitmapDrawable(getResources(), bitmap);
-                    target.bindDrawable(drawable);
-                }
-            }
-        };
+        mDrawableLruCache = new LruCache<>(20);
+        mHandler = new Handler();
+//        {
+//            @Override
+//            public void handleMessage(Message msg) {
+//                arirusLog.get().ShowLog(TAG, "HandleMessage");
+//                if (msg.what == GET_BITMAP && isAdded())
+//                {
+//                    arirusLog.get().ShowLog(TAG, "HandleMessage isAdded");
+//                    tempData Target = (tempData) msg.obj;
+//                    PhotoHolder target = Target.tempHolder;
+//                    Bitmap bitmap = Target.tempBitmap;
+//                    Drawable drawable = new BitmapDrawable(getResources(), bitmap);
+//                    target.bindDrawable(drawable);
+//                }
+//            }
+//        };
 
         mThumbnailDownloader = new ThumbnailDownloader<>(mHandler);
-//        mThumbnailDownloader.setThumbnailDownloadListener(new ThumbnailDownloader.ThumbnailDownloadListener<PhotoHolder>() {
-//            @Override
-//            public void onThumbnailDownloaded(PhotoHolder target, Bitmap thumbnail) {
-//                Drawable drawable = new BitmapDrawable(getResources(), thumbnail);
-//                target.bindDrawable(drawable);
-//            }
-//        });
+        mThumbnailDownloader.setThumbnailDownloadListener(new ThumbnailDownloader.ThumbnailDownloadListener<PhotoHolder>() {
+            @Override
+            public void onThumbnailDownloaded(PhotoHolder target, Bitmap thumbnail) {
+                Drawable drawable = new BitmapDrawable(getResources(), thumbnail);
+                target.bindDrawable(drawable);
+                GalleryItem item = mItems.get(target.getPosition());
+                mDrawableLruCache.put(item.getUrl_s(), drawable);
+            }
+        });
         mThumbnailDownloader.start();
         mThumbnailDownloader.getLooper();
     }
@@ -114,7 +116,7 @@ public class PhotoGalleryFragment extends Fragment {
         super.onDestroyView();
         arirusLog.get().ShowLog(TAG, "onDestroyView");
         mThumbnailDownloader.clearQuene();
-        mHandler.removeMessages(GET_BITMAP);
+//        mHandler.removeMessages(GET_BITMAP);
     }
 
     ///////////////////////////////RecyclerView 相关////////////////////////////////////
@@ -126,11 +128,6 @@ public class PhotoGalleryFragment extends Fragment {
             super(itemView);
             mImageView = (ImageView) itemView.findViewById(R.id.fragment_photo_gallery_image_view);
         }
-
-//        public void bindGalleryItem(GalleryItem item)
-//        {
-//            mTitleTextView.setText(item.toString());
-//        }
 
         public void bindDrawable(Drawable drawable)
         {
@@ -157,8 +154,10 @@ public class PhotoGalleryFragment extends Fragment {
         public void onBindViewHolder(PhotoHolder holder, int position) {
             GalleryItem galleryItem = mGalleryItems.get(position);
             holder.bindDrawable(getResources().getDrawable(R.drawable.drawable_defult));
-//            holder.bindGalleryItem(galleryItem);
-            mThumbnailDownloader.queueThumbnail(holder, galleryItem.getUrl_s());
+            if ( mDrawableLruCache.get(galleryItem.getUrl_s()) != null)
+                holder.bindDrawable(mDrawableLruCache.get(galleryItem.getUrl_s()));
+            else
+                mThumbnailDownloader.queueThumbnail(holder, galleryItem.getUrl_s());
         }
 
         @Override
@@ -180,17 +179,13 @@ public class PhotoGalleryFragment extends Fragment {
     ///////////////////////////////RecyclerView 相关////////////////////////////////////
     private class FetchItemsTask extends AsyncTask<Void, Void, List<GalleryItem>>
     {
-        private int index ;
-
         @Override
         protected List<GalleryItem> doInBackground(Void... params) {
-            index = this.hashCode();
             return FlickrFetchr.getInstance().fetchItems();
         }
 
         @Override
         protected void onPostExecute(List<GalleryItem> items) {
-//            arirusLog.get().ShowLog(TAG, "hashCode"+ String.valueOf(index));
             for ( GalleryItem item: items)
             {
                 mItems.add(item);

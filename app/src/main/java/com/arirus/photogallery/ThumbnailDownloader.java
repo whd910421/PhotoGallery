@@ -23,17 +23,17 @@ public class ThumbnailDownloader<T> extends HandlerThread {
     private Handler mRequestHandler = null;
     private ConcurrentMap<T,String> mRequestMap = new ConcurrentHashMap<>();
     private Handler mResponseHandler = null;
-//    private ThumbnailDownloadListener<T> mThumbnailDownloadListener;
-//
-//    public interface ThumbnailDownloadListener<T>
-//    {
-//        void onThumbnailDownloaded(T target, Bitmap thumbnail);
-//    }
-//
-//    public void setThumbnailDownloadListener(ThumbnailDownloadListener<T> listener)
-//    {
-//        mThumbnailDownloadListener = listener;
-//    }
+    private ThumbnailDownloadListener<T> mThumbnailDownloadListener;
+
+    public interface ThumbnailDownloadListener<T>
+    {
+        void onThumbnailDownloaded(T target, Bitmap thumbnail);
+    }
+
+    public void setThumbnailDownloadListener(ThumbnailDownloadListener<T> listener)
+    {
+        mThumbnailDownloadListener = listener;
+    }
 
     public ThumbnailDownloader( Handler responseHandler ) {
         super(TAG);
@@ -125,9 +125,9 @@ public class ThumbnailDownloader<T> extends HandlerThread {
             public void handleMessage(Message msg) {
                 if (msg.what == MESSAGE_DOWNLOAD)
                 {
-                    T Target = (T)msg.obj;
-                    arirusLog.get().ShowLog(TAG, "Got a request for URL " + mRequestMap.get(Target));
-                    handleRequest(Target);
+                    T target = (T)msg.obj;
+                    arirusLog.get().ShowLog(TAG, "Got a request for URL " + mRequestMap.get(target));
+                    handleRequest(target);
                 }
             }
         };
@@ -146,16 +146,16 @@ public class ThumbnailDownloader<T> extends HandlerThread {
             final Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapBytes, 0, bitmapBytes.length);
             arirusLog.get().ShowLog(TAG, "BitMap created");
 
-//            mResponseHandler.post(new Runnable() {
-//                @Override
-//                public void run() {
-//                    if (mRequestMap.get(target) != url || mHasQuit)
-//                    {return;}
-//                    mRequestMap.remove(target);
-//                    mThumbnailDownloadListener.onThumbnailDownloaded(target, bitmap);
-//                }
-//            });
-            mResponseHandler.obtainMessage(PhotoGalleryFragment.GET_BITMAP, new tempData((PhotoGalleryFragment.PhotoHolder)target, bitmap) ).sendToTarget();
+            mResponseHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (mRequestMap.get(target) != url || mHasQuit)
+                    {return;}
+                    mRequestMap.remove(target);
+                    mThumbnailDownloadListener.onThumbnailDownloaded(target, bitmap);
+                }
+            });
+//            mResponseHandler.obtainMessage(PhotoGalleryFragment.GET_BITMAP, new tempData((PhotoGalleryFragment.PhotoHolder)target, bitmap) ).sendToTarget();
         } catch (IOException ioe)
         {
             arirusLog.get().ShowLog(TAG, "Error Downloading image", ioe.toString());
