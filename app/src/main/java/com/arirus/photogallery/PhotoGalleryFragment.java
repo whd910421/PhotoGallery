@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
@@ -25,13 +26,18 @@ import java.util.List;
  * Created by whd910421 on 16/10/11.
  */
 
+
+
 public class PhotoGalleryFragment extends Fragment {
     private final static String TAG = "PhotoGralleryFragemnet";
-
+    public static final int GET_BITMAP = 0;
     private RecyclerView mRecyclerView;
     private List<GalleryItem> mItems = new ArrayList<>();
     private ThumbnailDownloader<PhotoHolder> mThumbnailDownloader;
+    private Handler mHandler ;
     private static int mLastPos ;
+
+
 
     public static PhotoGalleryFragment newInstance()
     {
@@ -44,16 +50,31 @@ public class PhotoGalleryFragment extends Fragment {
         setRetainInstance(true);
         new FetchItemsTask().execute();
 
-        Handler resposeHandler = new Handler();
-
-        mThumbnailDownloader = new ThumbnailDownloader<>(resposeHandler);
-        mThumbnailDownloader.setThumbnailDownloadListener(new ThumbnailDownloader.ThumbnailDownloadListener<PhotoHolder>() {
+        mHandler = new Handler()
+        {
             @Override
-            public void onThumbnailDownloaded(PhotoHolder target, Bitmap thumbnail) {
-                Drawable drawable = new BitmapDrawable(getResources(), thumbnail);
-                target.bindDrawable(drawable);
+            public void handleMessage(Message msg) {
+                arirusLog.get().ShowLog(TAG, "HandleMessage");
+                if (msg.what == GET_BITMAP && isAdded())
+                {
+                    arirusLog.get().ShowLog(TAG, "HandleMessage isAdded");
+                    tempData Target = (tempData) msg.obj;
+                    PhotoHolder target = Target.tempHolder;
+                    Bitmap bitmap = Target.tempBitmap;
+                    Drawable drawable = new BitmapDrawable(getResources(), bitmap);
+                    target.bindDrawable(drawable);
+                }
             }
-        });
+        };
+
+        mThumbnailDownloader = new ThumbnailDownloader<>(mHandler);
+//        mThumbnailDownloader.setThumbnailDownloadListener(new ThumbnailDownloader.ThumbnailDownloadListener<PhotoHolder>() {
+//            @Override
+//            public void onThumbnailDownloaded(PhotoHolder target, Bitmap thumbnail) {
+//                Drawable drawable = new BitmapDrawable(getResources(), thumbnail);
+//                target.bindDrawable(drawable);
+//            }
+//        });
         mThumbnailDownloader.start();
         mThumbnailDownloader.getLooper();
     }
@@ -91,11 +112,13 @@ public class PhotoGalleryFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        arirusLog.get().ShowLog(TAG, "onDestroyView");
         mThumbnailDownloader.clearQuene();
+        mHandler.removeMessages(GET_BITMAP);
     }
 
     ///////////////////////////////RecyclerView 相关////////////////////////////////////
-    private class PhotoHolder extends RecyclerView.ViewHolder
+    public class PhotoHolder extends RecyclerView.ViewHolder
     {
         private ImageView mImageView;
 
@@ -151,7 +174,7 @@ public class PhotoGalleryFragment extends Fragment {
         {
             mRecyclerView.setAdapter(new PhotoAdpter(mItems));
             mRecyclerView.scrollToPosition(mLastPos);
-            arirusLog.get().ShowLog(TAG, String.valueOf(mLastPos));
+//            arirusLog.get().ShowLog(TAG, String.valueOf(mLastPos));
         }
     }
     ///////////////////////////////RecyclerView 相关////////////////////////////////////
