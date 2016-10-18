@@ -2,9 +2,11 @@ package com.arirus.photogallery;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.support.v4.util.LruCache;
 
 import java.io.IOException;
 import java.lang.annotation.Target;
@@ -24,6 +26,7 @@ public class ThumbnailDownloader<T> extends HandlerThread {
     private ConcurrentMap<T,String> mRequestMap = new ConcurrentHashMap<>();
     private Handler mResponseHandler = null;
     private ThumbnailDownloadListener<T> mThumbnailDownloadListener;
+    private LruCache<String, Bitmap> mDrawableLruCache;
 
     public interface ThumbnailDownloadListener<T>
     {
@@ -38,6 +41,7 @@ public class ThumbnailDownloader<T> extends HandlerThread {
     public ThumbnailDownloader( Handler responseHandler ) {
         super(TAG);
         mResponseHandler =responseHandler;
+        mDrawableLruCache = new LruCache<>(50);
     }
 
     @Override
@@ -51,7 +55,7 @@ public class ThumbnailDownloader<T> extends HandlerThread {
         arirusLog.get().ShowLog(TAG, "Got a Url:"+ url);
         if (url == null)
             mRequestMap.remove(target);
-        else
+        else if(  mDrawableLruCache.get(url) == null )
         {
             mRequestMap.put(target,url);
             if (mRequestHandler!=null)
@@ -115,6 +119,11 @@ public class ThumbnailDownloader<T> extends HandlerThread {
             else
                 arirusLog.get().ShowLog(TAG,"HAndler is empty");
         }
+        else
+        {
+            mRequestMap.remove(target);
+            mThumbnailDownloadListener.onThumbnailDownloaded(target, mDrawableLruCache.get(url));
+        }
     }
 
     @Override
@@ -145,7 +154,7 @@ public class ThumbnailDownloader<T> extends HandlerThread {
             byte[] bitmapBytes = FlickrFetchr.getInstance().getUrlBytes(url);
             final Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapBytes, 0, bitmapBytes.length);
             arirusLog.get().ShowLog(TAG, "BitMap created");
-
+            mDrawableLruCache.put(url, bitmap);
             mResponseHandler.post(new Runnable() {
                 @Override
                 public void run() {

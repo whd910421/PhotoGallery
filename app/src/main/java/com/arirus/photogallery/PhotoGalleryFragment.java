@@ -4,13 +4,10 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.util.LruCache;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -18,7 +15,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
-import java.io.IOException;
+import com.squareup.picasso.Picasso;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,10 +31,9 @@ public class PhotoGalleryFragment extends Fragment {
 //    public static final int GET_BITMAP = 0;
     private RecyclerView mRecyclerView;
     private List<GalleryItem> mItems = new ArrayList<>();
-    private ThumbnailDownloader<PhotoHolder> mThumbnailDownloader;
+//    private ThumbnailDownloader<PhotoHolder> mThumbnailDownloader;
     private Handler mHandler ;
     private static int mLastPos ;
-    private LruCache<String, Drawable> mDrawableLruCache;
 
 
     public static PhotoGalleryFragment newInstance()
@@ -49,7 +46,6 @@ public class PhotoGalleryFragment extends Fragment {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
         new FetchItemsTask().execute();
-        mDrawableLruCache = new LruCache<>(20);
         mHandler = new Handler();
 //        {
 //            @Override
@@ -67,24 +63,22 @@ public class PhotoGalleryFragment extends Fragment {
 //            }
 //        };
 
-        mThumbnailDownloader = new ThumbnailDownloader<>(mHandler);
-        mThumbnailDownloader.setThumbnailDownloadListener(new ThumbnailDownloader.ThumbnailDownloadListener<PhotoHolder>() {
-            @Override
-            public void onThumbnailDownloaded(PhotoHolder target, Bitmap thumbnail) {
-                Drawable drawable = new BitmapDrawable(getResources(), thumbnail);
-                target.bindDrawable(drawable);
-                GalleryItem item = mItems.get(target.getPosition());
-                mDrawableLruCache.put(item.getUrl_s(), drawable);
-            }
-        });
-        mThumbnailDownloader.start();
-        mThumbnailDownloader.getLooper();
+//        mThumbnailDownloader = new ThumbnailDownloader<>(mHandler);
+//        mThumbnailDownloader.setThumbnailDownloadListener(new ThumbnailDownloader.ThumbnailDownloadListener<PhotoHolder>() {
+//            @Override
+//            public void onThumbnailDownloaded(PhotoHolder target, Bitmap thumbnail) {
+//                Drawable drawable = new BitmapDrawable(getResources(), thumbnail);
+//                target.bindDrawable(drawable);
+//            }
+//        });
+//        mThumbnailDownloader.start();
+//        mThumbnailDownloader.getLooper();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mThumbnailDownloader.quit();
+//        mThumbnailDownloader.quit();
     }
 
     @Nullable
@@ -98,10 +92,11 @@ public class PhotoGalleryFragment extends Fragment {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 GridLayoutManager gridLayoutManager = (GridLayoutManager) mRecyclerView.getLayoutManager();
-                arirusLog.get().ShowLog(TAG, "findFirstCompletelyVisibleItemPosition" + String.valueOf(gridLayoutManager.findFirstCompletelyVisibleItemPosition()));
+//                arirusLog.get().ShowLog(TAG, "findFirstCompletelyVisibleItemPosition" + String.valueOf(gridLayoutManager.findFirstCompletelyVisibleItemPosition()));
 
+                arirusLog.get().ShowLog("请不请求下一页?",String.valueOf(gridLayoutManager.findFirstCompletelyVisibleItemPosition()),String.valueOf(FlickrFetchr.getInstance().getCurPage()*50 -20));
                 if (gridLayoutManager.findFirstCompletelyVisibleItemPosition() >= FlickrFetchr.getInstance().getCurPage()*50 -20)
-                {
+                {   arirusLog.get().ShowLog("请求下一页");
                     new FetchItemsTask().execute();
                 }
                 mLastPos = gridLayoutManager.findFirstCompletelyVisibleItemPosition();
@@ -115,7 +110,7 @@ public class PhotoGalleryFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         arirusLog.get().ShowLog(TAG, "onDestroyView");
-        mThumbnailDownloader.clearQuene();
+//        mThumbnailDownloader.clearQuene();
 //        mHandler.removeMessages(GET_BITMAP);
     }
 
@@ -132,6 +127,11 @@ public class PhotoGalleryFragment extends Fragment {
         public void bindDrawable(Drawable drawable)
         {
             mImageView.setImageDrawable(drawable);
+        }
+
+        public void bindGalleryItem(GalleryItem item)
+        {
+            Picasso.with(getActivity()).load(item.getUrl_s()).placeholder(R.drawable.drawable_defult).into(mImageView);
         }
     }
 
@@ -154,10 +154,8 @@ public class PhotoGalleryFragment extends Fragment {
         public void onBindViewHolder(PhotoHolder holder, int position) {
             GalleryItem galleryItem = mGalleryItems.get(position);
             holder.bindDrawable(getResources().getDrawable(R.drawable.drawable_defult));
-            if ( mDrawableLruCache.get(galleryItem.getUrl_s()) != null)
-                holder.bindDrawable(mDrawableLruCache.get(galleryItem.getUrl_s()));
-            else
-                mThumbnailDownloader.queueThumbnail(holder, galleryItem.getUrl_s());
+            holder.bindGalleryItem(galleryItem);
+//            mThumbnailDownloader.queueThumbnail(holder, galleryItem.getUrl_s());
         }
 
         @Override
