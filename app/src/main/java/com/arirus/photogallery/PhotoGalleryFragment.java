@@ -1,5 +1,6 @@
 package com.arirus.photogallery;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -70,6 +71,12 @@ public class PhotoGalleryFragment extends Fragment {
                 return false;
             }
         });
+
+        MenuItem item = menu.findItem(R.id.menu_item_toggle_polling);
+        if (PollService.isServerAlarmOn(getActivity()))
+            item.setTitle("Stop Polling");
+        else
+            item.setTitle("Start Polling");
     }
 
     @Override
@@ -79,6 +86,11 @@ public class PhotoGalleryFragment extends Fragment {
             case R.id.menu_item_clear:
                 QueryPreferences.setStoredQuery(getActivity(),null);
                 updateItems();
+                return true;
+            case R.id.menu_item_toggle_polling:
+                boolean bPoll = !PollService.isServerAlarmOn(getActivity());
+                PollService.setServiceAlarm(getActivity(),bPoll);
+                getActivity().invalidateOptionsMenu();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -96,6 +108,7 @@ public class PhotoGalleryFragment extends Fragment {
         setRetainInstance(true);
         setHasOptionsMenu(true);
         updateItems();
+
         mHandler = new Handler();
 //        {
 //            @Override
@@ -238,10 +251,12 @@ public class PhotoGalleryFragment extends Fragment {
 
         @Override
         protected void onPostExecute(List<GalleryItem> items) {
-            for ( GalleryItem item: items)
-            {
-                mItems.add(item);
-            }
+
+//            for ( GalleryItem item: items)
+//            {
+//                mItems.add(item);
+//            }
+            mItems = items;
             setupAdapter();
         }
 
