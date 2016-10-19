@@ -151,7 +151,7 @@ public class ThumbnailDownloader<T> extends HandlerThread {
                 return;
             }
 
-            byte[] bitmapBytes = FlickrFetchr.getInstance().getUrlBytes(url);
+            byte[] bitmapBytes = new FlickrFetchr().getUrlBytes(url);
             final Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapBytes, 0, bitmapBytes.length);
             arirusLog.get().ShowLog(TAG, "BitMap created");
             mDrawableLruCache.put(url, bitmap);

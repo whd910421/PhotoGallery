@@ -4,7 +4,6 @@
 
 
     <item
-        app:id="@+id/xxxx"
         android:id="@+id/menu_item_search"
         app:actionViewClass="android.support.v7.widget.SearchView"
         android:title="Search"

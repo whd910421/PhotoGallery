@@ -38,14 +38,6 @@ public class FlickrFetchr {
         return curPage;
     }
     private static int curPage = 0;
-    private static FlickrFetchr mFlickrFetchr;
-
-    public static FlickrFetchr getInstance()
-    {
-        if (mFlickrFetchr == null)
-            mFlickrFetchr = new FlickrFetchr();
-        return mFlickrFetchr;
-    }
 
     public byte[] getUrlBytes(String urlSpec) throws IOException
     {
@@ -118,11 +110,13 @@ public class FlickrFetchr {
     public List<GalleryItem> fetchRecentPhotos()
     {
         String url = buildUrl(FETCH_RECENTS_METHOD, null);
+        arirusLog.get().ShowLog(TAG, "fetchRecentPhotos");
         return downloadGalleryItems(url);
     }
 
     public List<GalleryItem> searchPhotos(String query)
     {
+        arirusLog.get().ShowLog(TAG, "fetchRecentPhotos","keyword is ", query);
         String url = buildUrl(SEARCH_METHOD, query);
         return downloadGalleryItems(url);
     }

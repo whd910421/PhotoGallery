@@ -58,6 +58,9 @@ public class PhotoGalleryFragment extends Fragment {
             public boolean onQueryTextSubmit(String query) {
                 arirusLog.get().ShowLog(TAG, "QueryTextSubmit",query);
                 updateItems();
+                QueryPreferences.setStoredQuery(getActivity(), query);
+                searchView.clearFocus();
+
                 return true;
             }
 
@@ -67,6 +70,19 @@ public class PhotoGalleryFragment extends Fragment {
                 return false;
             }
         });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId())
+        {
+            case R.id.menu_item_clear:
+                QueryPreferences.setStoredQuery(getActivity(),null);
+                updateItems();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     private void updateItems()
@@ -128,11 +144,11 @@ public class PhotoGalleryFragment extends Fragment {
                 GridLayoutManager gridLayoutManager = (GridLayoutManager) mRecyclerView.getLayoutManager();
 //                arirusLog.get().ShowLog(TAG, "findFirstCompletelyVisibleItemPosition" + String.valueOf(gridLayoutManager.findFirstCompletelyVisibleItemPosition()));
 
-                arirusLog.get().ShowLog("请不请求下一页?",String.valueOf(gridLayoutManager.findFirstCompletelyVisibleItemPosition()),String.valueOf(FlickrFetchr.getInstance().getCurPage()*50 -20));
-                if (gridLayoutManager.findFirstCompletelyVisibleItemPosition() >= FlickrFetchr.getInstance().getCurPage()*50 -20)
-                {   arirusLog.get().ShowLog("请求下一页");
-                    new FetchItemsTask().execute();
-                }
+//                arirusLog.get().ShowLog("请不请求下一页?",String.valueOf(gridLayoutManager.findFirstCompletelyVisibleItemPosition()),String.valueOf(FlickrFetchr.getInstance().getCurPage()*50 -20));
+//                if (gridLayoutManager.findFirstCompletelyVisibleItemPosition() >= FlickrFetchr().getCurPage()*50 -20)
+//                {   arirusLog.get().ShowLog("请求下一页");
+//                    new FetchItemsTask().execute();
+//                }
                 mLastPos = gridLayoutManager.findFirstCompletelyVisibleItemPosition();
             }
         });
@@ -213,7 +229,11 @@ public class PhotoGalleryFragment extends Fragment {
     {
         @Override
         protected List<GalleryItem> doInBackground(Void... params) {
-            return FlickrFetchr.getInstance().searchPhotos("wow");
+            String keyWord = QueryPreferences.getStoredQUery(getActivity());
+            if (keyWord == null)
+                return new FlickrFetchr().fetchRecentPhotos();
+            else
+                return new FlickrFetchr().searchPhotos(keyWord);
         }
 
         @Override
