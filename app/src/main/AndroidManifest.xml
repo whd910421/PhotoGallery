@@ -35,6 +35,7 @@
                 <!--<action android:name="com.arirus.photogallery.SHOW_NOTIFICATION"/>-->
             <!--</intent-filter>-->
         <!--</receiver>-->
+        <activity android:name=".PhotoPageActivity"/>
     </application>
 
 </manifest>

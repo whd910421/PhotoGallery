@@ -181,10 +181,17 @@ public class PhotoGalleryFragment extends VisibleFragment {
     public class PhotoHolder extends RecyclerView.ViewHolder
     {
         private ImageView mImageView;
+        private GalleryItem mGalleryItem;
 
         public PhotoHolder(View itemView) {
             super(itemView);
             mImageView = (ImageView) itemView.findViewById(R.id.fragment_photo_gallery_image_view);
+            mImageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startActivity(PhotoPageActivity.newIntent(getActivity(), mGalleryItem.getPhotoUri()));
+                }
+            });
         }
 
         public void bindDrawable(Drawable drawable)
@@ -194,6 +201,7 @@ public class PhotoGalleryFragment extends VisibleFragment {
 
         public void bindGalleryItem(GalleryItem item)
         {
+            mGalleryItem = item;
             Picasso.with(getActivity()).load(item.getUrl_s()).placeholder(R.drawable.drawable_defult).into(mImageView);
         }
     }

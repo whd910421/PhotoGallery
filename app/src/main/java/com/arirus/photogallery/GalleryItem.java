@@ -1,5 +1,7 @@
 package com.arirus.photogallery;
 
+import android.net.Uri;
+
 /**
  * Created by whd910421 on 16/10/11.
  */
@@ -8,6 +10,7 @@ public class GalleryItem {
     private String title;
     private String id;
     private String url_s;
+    private String owner;
 
     @Override
     public String toString()
@@ -37,5 +40,21 @@ public class GalleryItem {
 
     public void setUrl_s(String url_s) {
         this.url_s = url_s;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
+
+    public Uri getPhotoUri()
+    {
+        return Uri.parse("http://www.flickr.com/photos/").buildUpon()
+                .appendPath(owner)
+                .appendPath(id)
+                .build();
     }
 }
