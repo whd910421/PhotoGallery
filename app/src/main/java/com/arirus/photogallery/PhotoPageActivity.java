@@ -10,6 +10,7 @@ import android.support.v4.app.Fragment;
  */
 
 public class PhotoPageActivity extends SingleFragmentActivity {
+    private static PhotoPageFragment mFragment;
     public static Intent newIntent(Context context, Uri uri)
     {
         Intent i = new Intent(context, PhotoPageActivity.class);
@@ -19,8 +20,15 @@ public class PhotoPageActivity extends SingleFragmentActivity {
 
     @Override
     protected Fragment createFragment() {
-        return PhotoPageFragment.newInstance(getIntent().getData());
+        mFragment = PhotoPageFragment.newInstance(getIntent().getData());
+        return mFragment;
     }
 
-
+    @Override
+    public void onBackPressed() {
+        if(mFragment.canGoBack())
+            mFragment.goBack();
+        else
+            super.onBackPressed();
+    }
 }
